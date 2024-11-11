@@ -21,68 +21,68 @@
 				<p>Oops! Invalid location</p>
 			</div>
  
-			<TransitionGroup
-				name="fade"
-				tag="div"
-				class="result-wrapper"
-				@before-enter="beforeEnter"
-				@enter="enter"
-				@leave="leave"
-			>
+			<Transition @enter="enter" @leave="leave">
 				<div
 					v-if="weatherData && !serverError"
-					:key="`${weatherData.main}_1`"
-					class="weather_result-box"
+					class="result-wrapper"
+					:style="{
+						'--animationTime': `${animationTime}s`,
+						'--delay': `${weatherData ? 0 : animationTime}s`
+					}"
 				>
-					<NuxtImg
-						v-if="weatherData.weather?.length"
-						:src="`/images/${weatherData.weather[0]?.main.toLowerCase()}.png`"
-						alt="Weather image"
-						class="weather-image"
-					/>
-					
-					<div class="weather_result-box_text">
-						<p class="value">
-							{{ checkInteger(weatherData.main.temp) }} <sup class="celsius">°C</sup>
-						</p>
+					<div
+						:key="`${weatherData.name}_1`"
+						class="weather_result-box"
+					>
+						<NuxtImg
+							v-if="weatherData.weather?.length"
+							:src="`/images/${weatherData.weather[0]?.main.toLowerCase()}.png`"
+							alt="Weather image"
+							class="weather-image"
+						/>
+						
+						<div class="weather_result-box_text">
+							<p class="value">
+								{{ checkInteger(weatherData.main.temp) }} <sup class="celsius">°C</sup>
+							</p>
 
-						<p v-if="weatherData.weather?.length" class="weather-desc">
-							{{ weatherData.weather[0].description }}
-						</p>
-					</div>
-				</div>
-
-				<div
-					v-if="weatherData && !serverError"
-					:key="`${weatherData.main}_2`"
-					class="weather_details"
-				>
-					<div class="humidity">
-						<div class="weather_details-text">
-							<NuxtIcon name="humidity" />
-
-							<div class="weather_details-box">
-								<p class="parameter">Humidity</p>
-								<p class="value">{{ parseInt(`${weatherData.main?.humidity}`) }}%</p>
-							</div>
+							<p v-if="weatherData.weather?.length" class="weather-desc">
+								{{ weatherData.weather[0].description }}
+							</p>
 						</div>
 					</div>
 
-					<div class="wind">
-						<div class="weather_details-text">
-							<NuxtIcon name="wind" />
+					<div
+						:class="['weather_details', `${weatherData.name}`]"
+						:key="`${weatherData.name}`"
+					>
+						<div class="humidity">
+							<div class="weather_details-text">
+								<NuxtIcon name="humidity" />
 
-							<div class="weather_details-box">
-								<p class="parameter">Wind speed</p>
-								<p class="value">
-									{{ weatherData.wind?.speed }}
-									<span class="units">km/h</span>
-								</p>
+								<div class="weather_details-box">
+									<p class="parameter">Humidity</p>
+									<p class="value">{{ parseInt(`${weatherData.main?.humidity}`) }}%</p>
+								</div>
+							</div>
+						</div>
+
+						<div class="wind">
+							<div class="weather_details-text">
+								<NuxtIcon name="wind" />
+
+								<div class="weather_details-box">
+									<p class="parameter">Wind speed</p>
+									<p class="value">
+										{{ weatherData.wind?.speed }}
+										<span class="units">km/h</span>
+									</p>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</TransitionGroup>
+			</Transition>
 		</div>
 	</div>
 </template>
@@ -116,6 +116,7 @@ interface weatherDataInterface {
 const cityRef = ref('');
 const weatherData = ref<weatherDataInterface>();
 const serverError = ref(false);
+const animationTime = 0.6;
 
 async function handleClick() {
 	const APIkey = 'ac5701ead3d77d173ebbadde01a9882b';
@@ -128,6 +129,8 @@ async function handleClick() {
 	}
 
 	try {
+		// const test = await $fetch('https://petstore.swagger.io/v2/swagger.json?status=sold')
+		// console.log(test);
 		const response = await $fetch(url, {
 			query: {
 				q: cityRef.value,
@@ -135,6 +138,7 @@ async function handleClick() {
 				appid: APIkey
 			}
 		}) as unknown as weatherDataInterface;
+		
 		// const response = data.value as unknown as weatherDataInterface;
 		console.log('response => ', response)
 		
@@ -160,18 +164,16 @@ function clearValue() {
 	weatherData.value = undefined;
 }
 
-function beforeEnter(el: HTMLBodyElement) {
-	console.log('🎂 beforeEnter => ', el);
-}
-
 function enter(el: HTMLBodyElement) {
-	console.log('🎁 enter => ', el);
-	
+	Object.assign(el.style, {
+		height: el.scrollHeight + 'px',
+	});
 }
 
 function leave(el: HTMLBodyElement) {
-	console.log('✔ leave => ', el);
-	
+	Object.assign(el.style, {
+		height: 0 + 'px',
+	});
 }
 
 </script>
@@ -194,7 +196,6 @@ function leave(el: HTMLBodyElement) {
 		background-color: $blue;
 		font-family: $second-font;
 		color: $white;
-		transition: all .5s ease;
 
 		&_search-box {
 			display: flex;
@@ -307,6 +308,26 @@ function leave(el: HTMLBodyElement) {
 			}
 		}
 
+		&-image,
+		&_result-box_text,
+		.humidity,
+		.wind {
+			opacity: 0;
+			scale: .8;
+			animation: show .5s ease var(--delay) forwards;
+
+			@keyframes show {
+				0% {
+					opacity: 0;
+					scale: .7;
+				}
+				100% {
+					opacity: 1;
+					scale: 1;
+				}
+			}
+		}
+
 		&_details {
 			display: flex;
 			align-items: center;
@@ -344,7 +365,8 @@ function leave(el: HTMLBodyElement) {
 		display: flex;
 		flex-direction: column;
 		row-gap: 2rem;
-		// transition: height .4s ease; 
+		height: 0;
+		transition: height var(--animationTime) ease; 
 	}
 }
 </style>

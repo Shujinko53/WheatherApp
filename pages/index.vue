@@ -88,6 +88,9 @@
 </template>
 
 <script setup lang="ts">
+import { API_KEY } from '~/consts/api';
+import { WEATHER_URL, CITY_URL } from '~/consts/urls';
+
 useHead({
 	title: 'Wheather App',
 })
@@ -119,25 +122,30 @@ const serverError = ref(false);
 const animationTime = 0.6;
 
 async function handleClick() {
-	const APIkey = 'ac5701ead3d77d173ebbadde01a9882b';
-
-	const url = `https://api.openweathermap.org/data/2.5/weather`;
-
 	if (!cityRef.value) {
 		clearValue();
 		return;
 	}
 
 	try {
-		const response = await $fetch(url, {
+		const response = await $fetch(WEATHER_URL, {
 			query: {
 				q: cityRef.value,
 				units: 'metric',
-				appid: APIkey
+				appid: API_KEY
 			}
 		}) as unknown as weatherDataInterface;
 
-		console.log('response => ', response)
+		const response2 = await $fetch(CITY_URL, {
+			method: 'GET',
+			query: {
+				q: cityRef.value,
+				units: 'metric',
+				appid: API_KEY
+			}
+		});
+
+		console.log('response2 => ', response2)
 
 		if (!response || response.cod === 404) {
 			serverError.value = true;

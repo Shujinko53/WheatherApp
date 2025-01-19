@@ -120,7 +120,7 @@ const animationTime = 0.6;
 
 async function handleClick() {
 	const APIkey = 'ac5701ead3d77d173ebbadde01a9882b';
-	
+
 	const url = `https://api.openweathermap.org/data/2.5/weather`;
 
 	if (!cityRef.value) {
@@ -129,8 +129,6 @@ async function handleClick() {
 	}
 
 	try {
-		// const test = await $fetch('https://petstore.swagger.io/v2/swagger.json?status=sold')
-		// console.log(test);
 		const response = await $fetch(url, {
 			query: {
 				q: cityRef.value,
@@ -138,10 +136,9 @@ async function handleClick() {
 				appid: APIkey
 			}
 		}) as unknown as weatherDataInterface;
-		
-		// const response = data.value as unknown as weatherDataInterface;
+
 		console.log('response => ', response)
-		
+
 		if (!response || response.cod === 404) {
 			serverError.value = true;
 			return;
@@ -165,9 +162,11 @@ function clearValue() {
 }
 
 function enter(el: HTMLBodyElement) {
-	Object.assign(el.style, {
-		height: el.scrollHeight + 'px',
-	});
+	setTimeout(() => {
+		Object.assign(el.style, {
+			height: el.scrollHeight + 'px',
+		});
+	}, animationTime * 1000);
 }
 
 function leave(el: HTMLBodyElement) {
@@ -184,6 +183,7 @@ function leave(el: HTMLBodyElement) {
 	align-items: center;
 	justify-content: center;
 	font-size: 1.6rem;
+	background-color: $secondary;
 
 	.weather {
 		position: relative;
@@ -321,6 +321,7 @@ function leave(el: HTMLBodyElement) {
 					opacity: 0;
 					scale: .7;
 				}
+
 				100% {
 					opacity: 1;
 					scale: 1;
@@ -366,7 +367,7 @@ function leave(el: HTMLBodyElement) {
 		flex-direction: column;
 		row-gap: 2rem;
 		height: 0;
-		transition: height var(--animationTime) ease; 
+		transition: height var(--animationTime) ease;
 	}
 }
 </style>

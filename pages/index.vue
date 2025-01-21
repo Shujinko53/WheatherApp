@@ -1,27 +1,15 @@
 <template>
 	<div class="HomePage page">
 		<div class="weather">
-			<div class="weather_search-box">
-				<NuxtIcon name="location" class="loc-icon icon" />
-
-				<input
-					type="text"
-					placeholder="Enter your location"
-					class="search_input"
-					v-model="cityRef"
-				>
-				<button class="search_btn" @click="handleClick">
-					<NuxtIcon name="search" class="search-icon icon" />
-				</button>
-			</div>
-
+			<SearchBlock />
+			
 			<div v-if="serverError" class="not-found">
 				<NuxtImg src="/images/404.png" alt="Not found image" />
 
 				<p>Oops! Invalid location</p>
 			</div>
  
-			<Transition @enter="enter" @leave="leave">
+			<!-- <Transition @enter="enter" @leave="leave">
 				<div
 					v-if="weatherData && !serverError"
 					class="result-wrapper"
@@ -31,7 +19,7 @@
 					}"
 				>
 					<div
-						:key="`${weatherData.name}_1`"
+						:key="`${weatherData.id}`"
 						class="weather_result-box"
 					>
 						<NuxtImg
@@ -43,7 +31,8 @@
 						
 						<div class="weather_result-box_text">
 							<p class="value">
-								{{ checkInteger(weatherData.main.temp) }} <sup class="celsius">°C</sup>
+								{{ checkInteger(weatherData.main.temp) }}
+								<sup class="celsius">°C</sup>
 							</p>
 
 							<p v-if="weatherData.weather?.length" class="weather-desc">
@@ -56,117 +45,60 @@
 						:class="['weather_details', `${weatherData.name}`]"
 						:key="`${weatherData.name}`"
 					>
-						<div class="humidity">
-							<div class="weather_details-text">
-								<NuxtIcon name="humidity" />
+						<WeatherInfoBox
+							:value="weatherData.main.humidity"
+							:icon="humidityDetailsBox.icon"
+							:text="humidityDetailsBox.text"
+							:metric="humidityDetailsBox.metric"
+							class="details_box"
+						/>
 
-								<div class="weather_details-box">
-									<p class="parameter">Humidity</p>
-									<p class="value">{{ parseInt(`${weatherData.main?.humidity}`) }}%</p>
-								</div>
-							</div>
-						</div>
-
-						<div class="wind">
-							<div class="weather_details-text">
-								<NuxtIcon name="wind" />
-
-								<div class="weather_details-box">
-									<p class="parameter">Wind speed</p>
-									<p class="value">
-										{{ weatherData.wind?.speed }}
-										<span class="units">km/h</span>
-									</p>
-								</div>
-							</div>
-						</div>
+						<WeatherInfoBox
+							:value="weatherData.wind.speed"
+							:icon="windDetailsBox.icon"
+							:text="windDetailsBox.text"
+							:metric="windDetailsBox.metric"
+							class="details_box"
+						/>
 					</div>
 				</div>
-			</Transition>
+			</Transition> -->
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { API_KEY } from '~/consts/api';
-import { WEATHER_URL, CITY_URL } from '~/consts/urls';
+import WeatherInfoBox from '~/components/WeatherInfoBox.vue';
+import SearchBlock from '~/components/SearchBlock.vue';
+import { getWeather } from '~/components/getWeather';
+import { convertInteger } from '~/components/mathOps';
 
 useHead({
 	title: 'Wheather App',
 })
 
-type TypeWeather = {
-	main: string,
-	description: string
-}
-
-interface weatherDataInterface {
-	cod: number,
-	name: string,
-	main: {
-		feels_like: number,
-		humidity: number,
-		temp: number,
-	},
-	weather?: TypeWeather[],
-	wind: {
-		deg: number,
-		gust: number,
-		speed: number
-	}
-}
-
-const cityRef = ref('');
-const weatherData = ref<weatherDataInterface>();
 const serverError = ref(false);
+
 const animationTime = 0.6;
 
-async function handleClick() {
-	if (!cityRef.value) {
-		clearValue();
-		return;
-	}
-
-	try {
-		const response = await $fetch(WEATHER_URL, {
-			query: {
-				q: cityRef.value,
-				units: 'metric',
-				appid: API_KEY
-			}
-		}) as unknown as weatherDataInterface;
-
-		const response2 = await $fetch(CITY_URL, {
-			method: 'GET',
-			query: {
-				q: cityRef.value,
-				units: 'metric',
-				appid: API_KEY
-			}
-		});
-
-		console.log('response2 => ', response2)
-
-		if (!response || response.cod === 404) {
-			serverError.value = true;
-			return;
-		}
-
-		serverError.value = false;
-		weatherData.value = response;
-	} catch (error) {
-		weatherData.value = {} as weatherDataInterface;
-		console.log('fetch error: ', error);
-	}
+const windDetailsBox = {
+	text: 'Wind speed',
+	icon: 'wind',
+	metric: 'km/h',
 }
 
-function checkInteger(number: number): number {
-	return Number.isInteger(number) ? number : +number.toFixed(1);
+const humidityDetailsBox = {
+	text: 'Humidity',
+	icon: 'humidity',
+	metric: 'km/h',
 }
+
+// ---- Other methods ----
 
 function clearValue() {
-	serverError.value = false;
-	weatherData.value = undefined;
+	// serverError.value = false;
+	// weatherData.value = undefined;
+	// Object.assign(citiesData, []);
 }
 
 function enter(el: HTMLBodyElement) {
@@ -191,73 +123,18 @@ function leave(el: HTMLBodyElement) {
 	align-items: center;
 	justify-content: center;
 	font-size: 1.6rem;
-	background-color: $secondary;
 
 	.weather {
 		position: relative;
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		width: 35rem;
+		width: 42rem;
 		padding: 2rem;
 		border-radius: 2rem;
 		background-color: $blue;
 		font-family: $second-font;
 		color: $white;
-
-		&_search-box {
-			display: flex;
-			align-items: center;
-
-			.search_input {
-				display: flex;
-				align-items: center;
-				width: 75%;
-				height: 4rem;
-				border-radius: 1rem;
-				margin-left: .4rem;
-				padding: 0 1rem;
-				border: 0;
-				background-color: $white;
-				font-size: 1.6rem;
-				line-height: 1;
-				color: $text-color;
-
-				&::placeholder {
-					font-size: 1.4rem;
-					color: $gray-400;
-				}
-			}
-
-			.loc-icon {
-				font-size: 1.8rem;
-			}
-
-			.search_btn {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 3.6rem;
-				height: 3.6rem;
-				margin-left: auto;
-				border-radius: 50%;
-				background-color: $gray-100;
-				color: $text-color;
-				transition:
-					background-color .3s ease,
-					color .3s ease,
-					opacity .1s ease-in-out;
-
-				.search-icon {
-					font-size: 2rem;
-				}
-
-				&:hover {
-					background-color: rgba($gray-100, .5);
-					color: $white;
-				}
-			}
-		}
 
 		.not-found {
 			display: flex;
@@ -319,7 +196,7 @@ function leave(el: HTMLBodyElement) {
 		&-image,
 		&_result-box_text,
 		.humidity,
-		.wind {
+		.details_box {
 			opacity: 0;
 			scale: .8;
 			animation: show .5s ease var(--delay) forwards;

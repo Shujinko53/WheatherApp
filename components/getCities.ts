@@ -3,11 +3,11 @@ import { CITY_URL } from '~/consts/urls';
 import type { ICitiesResponse } from '~/models/city';
 
 
-export async function getCities(city: string) {
+export async function getCities(city: string) {	
     const citiesData = reactive({} as ICitiesResponse);
     const serverError = ref(false);
 
-	if (Object.keys(citiesData).length) return;
+	if (Object.keys(citiesData).length || !city) return;
 
 	try {
 		const citiesResponse = await $fetch(CITY_URL, {
@@ -19,15 +19,14 @@ export async function getCities(city: string) {
 			}
 		}) as ICitiesResponse;
 
-		console.log('📃 cities response => ', citiesResponse);
+		// console.log('📃 cities response => ', citiesResponse);
 
 		if (!citiesResponse || citiesResponse.cod === '404') {
 			serverError.value = true;
-			return;
 		}
 
-		serverError.value = false;
-		Object.assign(citiesData, citiesResponse);
+		serverError.value = false;		
+		Object.assign(citiesData, citiesResponse ?? {});
 	} catch (error) {
 		Object.assign(citiesData, {});
         serverError.value = true;

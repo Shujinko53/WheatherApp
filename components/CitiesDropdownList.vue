@@ -4,8 +4,17 @@
 			v-for="(city, index) in citiesList"
 			:key="index"
 			class="cities_list-item"
+			@click="$emit('clickCity', city)"
 		>
-			<span class="city">{{ `${city.name}, ${city.sys.country}` }}</span>
+			<div class="country-box">
+				<span>{{ `${city.name}, ${city.sys.country} ` }}</span> 
+				<NuxtImg
+					class="flag"
+					:src="`https://openweathermap.org/images/flags/${city.sys.country.toLocaleLowerCase()}.png`"
+					alt="Flat picture"
+				/>
+			</div>
+
 			<span class="temp">{{ `${Math.round(city.main.temp)}°C` }}</span>
 			<span class="coords">{{ `${city.coord.lat}, ${city.coord.lon}` }}</span>
 		</li>
@@ -15,7 +24,6 @@
 <script setup lang="ts">
 import type { ICityData } from '~/models/city';
 import { defineProps } from 'vue';
-import { convertInteger } from '~/components/mathOps';
 
 defineProps<{
 	citiesList: ICityData[]
@@ -32,7 +40,7 @@ defineProps<{
 
 	&-item {
 		display: grid;
-		grid-template-columns: 2fr 1fr 2fr;
+		grid-template-columns: 3fr 1fr 2fr;
 		gap: 1rem;
 		padding: 1rem;
 		font-size: 1.2rem;
@@ -46,8 +54,13 @@ defineProps<{
 			background-color: $gray-100;
 		}
 
-		.city {
-			justify-self: flex-start;
+		.country-box {
+			white-space: wrap;
+		}
+
+		.flag {
+			flex-shrink: 0;
+			height: 8pt;
 		}
 
 		.temp {

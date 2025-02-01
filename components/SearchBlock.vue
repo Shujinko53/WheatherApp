@@ -11,10 +11,10 @@
 				@keydown.enter="pressEnter"
 			>
 
-			<CitiesDropdownList :cities-list="cities.value" />
+			<CitiesDropdownList :cities-list="cities.value" @clickCity="clickCity" />
 		</div>
 		
-		<SearchBtn @click="$emit('getWeather', selectedCity)" />
+		<SearchBtn @click="pressEnter" />
 	</div>
 </template>
 
@@ -22,8 +22,10 @@
 import SearchBtn from '~/components/SearchBtn.vue';
 import CitiesDropdownList from '~/components/CitiesDropdownList.vue';
 import { getCities } from '~/components/getCities';
-import type { ICitiesResponse, ICityData } from '~/models/city';
+import type { ICityData } from '~/models/city';
+import { defineEmits } from 'vue';
 
+const emit = defineEmits(['enterCity', 'clickCity'])
 const cityRef = ref('');
 let cities = reactive({
 	value: [] as ICityData[],
@@ -31,12 +33,19 @@ let cities = reactive({
 		this.value = data;
 	}
 });
-const selectedCity = reactive({} as ICityData);
+const empty = ref(false);
 
 function pressEnter() {
+	emit('enterCity');
 	getCities(cityRef.value).then(data => {
 		cities.setItems(data?.citiesData.list as ICityData[]);
+		empty.value = data?.citiesData.count === 0;
 	});
+}
+
+function clickCity(cityData: ICityData) {
+	emit('clickCity', cityData);
+	cities.setItems([]);
 }
 </script>
 

@@ -1,45 +1,40 @@
 
-import { API_KEY } from '~/consts/api';
+import { WEATHER_KEY } from '~/consts/api';
 import { WEATHER_URL } from '~/consts/urls';
 import type { weatherDataInterface } from '~/models/weather';
+import type { ICityData } from '~/models/city';
 
 
 // ----- Weather Data -----
 
-export async function getWeather(city: string) {
-    const weatherData = ref<weatherDataInterface>();
-    const serverError = ref(false);
+export async function getWeather(city: ICityData) {
+    const weatherData = reactive({} as weatherDataInterface);
+	const serverError = ref(false);
 
-	// if (!cityRef.value) {
-	// 	clearValue();
-	// 	return;
-	// }
+	if (Object.keys(weatherData).length) return;
 
 	try {
-		const response = await $fetch(WEATHER_URL, {
+		const response: any = await $fetch(WEATHER_URL, {
 			query: {
-				q: city,
+				lat: city.coord.lat,
+				lon: city.coord.lon,
 				units: 'metric',
-				appid: API_KEY
+				appid: WEATHER_KEY,
 			}
-		}) as unknown as weatherDataInterface;
+		} );
+		const { current } = response;
 
-		console.log('📃 weather response => ', response);
+		// console.log('📃 weather response => ', current);
 
-		if (!response || response.cod === 404) {
-			serverError.value = true;
-			return;
-		}
-
-		serverError.value = false;
-		weatherData.value = response;
+		Object.assign(weatherData, current)
 	} catch (error) {
-		weatherData.value = {} as weatherDataInterface;
+		serverError.value = true;
+		Object.assign(weatherData, {});
 		console.log('❌ fetch weatherData error: ', error);
 	}
 
     return {
         weatherData,
-        serverError
+		serverError
     }
 }

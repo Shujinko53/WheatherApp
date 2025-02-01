@@ -1,17 +1,11 @@
 <template>
 	<div class="HomePage page">
 		<div class="weather">
-			<SearchBlock />
-			
-			<div v-if="serverError" class="not-found">
-				<NuxtImg src="/images/404.png" alt="Not found image" />
-
-				<p>Oops! Invalid location</p>
-			</div>
+			<SearchBlock @click-city="clickCity" @enter-city="serverError = false" />
  
-			<!-- <Transition @enter="enter" @leave="leave">
+			<Transition @enter="enter" @leave="leave">
 				<div
-					v-if="weatherData && !serverError"
+					v-if="Object.keys(weatherData).length"
 					class="result-wrapper"
 					:style="{
 						'--animationTime': `${animationTime}s`,
@@ -19,7 +13,7 @@
 					}"
 				>
 					<div
-						:key="`${weatherData.id}`"
+						:key="`${weatherData.dt}`"
 						class="weather_result-box"
 					>
 						<NuxtImg
@@ -31,7 +25,7 @@
 						
 						<div class="weather_result-box_text">
 							<p class="value">
-								{{ checkInteger(weatherData.main.temp) }}
+								{{ weatherData.temp }}
 								<sup class="celsius">°C</sup>
 							</p>
 
@@ -42,11 +36,11 @@
 					</div>
 
 					<div
-						:class="['weather_details', `${weatherData.name}`]"
-						:key="`${weatherData.name}`"
+						class="weather_details"
+						:key="`${weatherData.dt}_${weatherData.clouds}`"
 					>
 						<WeatherInfoBox
-							:value="weatherData.main.humidity"
+							:value="weatherData.humidity"
 							:icon="humidityDetailsBox.icon"
 							:text="humidityDetailsBox.text"
 							:metric="humidityDetailsBox.metric"
@@ -54,7 +48,7 @@
 						/>
 
 						<WeatherInfoBox
-							:value="weatherData.wind.speed"
+							:value="weatherData.wind_speed"
 							:icon="windDetailsBox.icon"
 							:text="windDetailsBox.text"
 							:metric="windDetailsBox.metric"
@@ -62,7 +56,14 @@
 						/>
 					</div>
 				</div>
-			</Transition> -->
+
+				<!-- <div v-if="serverError" class="not-found">
+					<NuxtImg src="/images/404.png" alt="Not found image" />
+
+					<p>Oops! Invalid location</p>
+				</div> -->
+			</Transition>
+
 		</div>
 	</div>
 </template>
@@ -71,7 +72,8 @@
 import WeatherInfoBox from '~/components/WeatherInfoBox.vue';
 import SearchBlock from '~/components/SearchBlock.vue';
 import { getWeather } from '~/components/getWeather';
-import { convertInteger } from '~/components/mathOps';
+import type { ICityData } from '~/models/city';
+import type { weatherDataInterface } from '~/models/weather';
 
 useHead({
 	title: 'Wheather App',
@@ -80,6 +82,8 @@ useHead({
 const serverError = ref(false);
 
 const animationTime = 0.6;
+
+const weatherData = reactive({} as weatherDataInterface);
 
 const windDetailsBox = {
 	text: 'Wind speed',
@@ -95,13 +99,18 @@ const humidityDetailsBox = {
 
 // ---- Other methods ----
 
-function clearValue() {
-	// serverError.value = false;
-	// weatherData.value = undefined;
-	// Object.assign(citiesData, []);
+function clickCity(cityData: ICityData) {
+	getWeather(cityData).then(data => {
+		Object.assign(weatherData, data?.weatherData);
+	})
 }
 
+
+// ----- Animation block ----
+
 function enter(el: HTMLBodyElement) {
+	console.log('🎈 enter => ', el);
+
 	setTimeout(() => {
 		Object.assign(el.style, {
 			height: el.scrollHeight + 'px',
@@ -110,6 +119,7 @@ function enter(el: HTMLBodyElement) {
 }
 
 function leave(el: HTMLBodyElement) {
+	console.log('🎈 leave => ', el);
 	Object.assign(el.style, {
 		height: 0 + 'px',
 	});

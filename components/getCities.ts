@@ -7,7 +7,7 @@ export async function getCities(city: string) {
     const citiesData = reactive({} as ICitiesResponse);
     const serverError = ref(false);
 
-	if (Object.keys(citiesData).length || !city) return;
+	if (!city) return;
 
 	try {
 		const citiesResponse = await $fetch(CITY_URL, {

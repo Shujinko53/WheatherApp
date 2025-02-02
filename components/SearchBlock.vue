@@ -37,8 +37,9 @@ const empty = ref(false);
 
 function pressEnter() {
 	emit('enterCity');
+
 	getCities(cityRef.value).then(data => {
-		cities.setItems(data?.citiesData.list as ICityData[]);
+		cities.setItems(data?.citiesData.list as ICityData[] ?? []);
 		empty.value = data?.citiesData.count === 0;
 	});
 }

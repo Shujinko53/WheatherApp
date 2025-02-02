@@ -11,7 +11,7 @@ export async function getWeather(city: ICityData) {
     const weatherData = reactive({} as weatherDataInterface);
 	const serverError = ref(false);
 
-	if (Object.keys(weatherData).length) return;
+	if (!Object.keys(city).length) return;
 
 	try {
 		const response: any = await $fetch(WEATHER_URL, {

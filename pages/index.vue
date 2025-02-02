@@ -1,7 +1,7 @@
 <template>
 	<div class="HomePage page">
 		<div class="weather">
-			<SearchBlock @click-city="clickCity" @enter-city="serverError = false" />
+			<SearchBlock @click-city="clickCity" @enter-city="enterCity" />
  
 			<Transition @enter="enter" @leave="leave">
 				<div
@@ -80,7 +80,6 @@ useHead({
 })
 
 const serverError = ref(false);
-
 const animationTime = 0.6;
 
 const weatherData = reactive({} as weatherDataInterface);
@@ -99,7 +98,13 @@ const humidityDetailsBox = {
 
 // ---- Other methods ----
 
+function enterCity() {
+	serverError.value = false;
+}
+
 function clickCity(cityData: ICityData) {
+	console.log(cityData);
+
 	getWeather(cityData).then(data => {
 		Object.assign(weatherData, data?.weatherData);
 	})
@@ -109,8 +114,6 @@ function clickCity(cityData: ICityData) {
 // ----- Animation block ----
 
 function enter(el: HTMLBodyElement) {
-	console.log('🎈 enter => ', el);
-
 	setTimeout(() => {
 		Object.assign(el.style, {
 			height: el.scrollHeight + 'px',
@@ -119,7 +122,6 @@ function enter(el: HTMLBodyElement) {
 }
 
 function leave(el: HTMLBodyElement) {
-	console.log('🎈 leave => ', el);
 	Object.assign(el.style, {
 		height: 0 + 'px',
 	});
